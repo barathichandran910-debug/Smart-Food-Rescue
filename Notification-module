@@ -1,0 +1,139 @@
+from datetime import datetime
+
+
+# Store notifications
+notifications = []
+
+
+# Store pickup assignments
+pickup_assignments = []
+
+
+def send_notification(trust_name, donation_id, food_type, quantity):
+    """
+    Send a notification to the selected trust.
+    """
+
+    notification = {
+        "id": len(notifications) + 1,
+        "trust_name": trust_name,
+        "donation_id": donation_id,
+        "message": (
+            f"New food donation available: "
+            f"{quantity} people worth of {food_type}"
+        ),
+        "status": "Sent",
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    notifications.append(notification)
+
+    return notification
+
+
+def assign_pickup(donation_id, volunteer_name, pickup_location):
+    """
+    Assign a volunteer for food pickup.
+    """
+
+    pickup = {
+        "id": len(pickup_assignments) + 1,
+        "donation_id": donation_id,
+        "volunteer": volunteer_name,
+        "pickup_location": pickup_location,
+        "status": "Assigned",
+        "assigned_at": datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+    }
+
+    pickup_assignments.append(pickup)
+
+    return pickup
+
+
+def update_delivery_status(donation_id, status):
+    """
+    Update food delivery status.
+    """
+
+    valid_status = [
+        "Assigned",
+        "Food Picked Up",
+        "Out for Delivery",
+        "Delivered"
+    ]
+
+    if status not in valid_status:
+        return {
+            "success": False,
+            "message": "Invalid delivery status"
+        }
+
+    for pickup in pickup_assignments:
+
+        if pickup["donation_id"] == donation_id:
+
+            pickup["status"] = status
+
+            return {
+                "success": True,
+                "message": "Delivery status updated",
+                "pickup": pickup
+            }
+
+    return {
+        "success": False,
+        "message": "Pickup assignment not found"
+    }
+
+
+def get_notifications():
+    """
+    Return all notifications.
+    """
+
+    return notifications
+
+
+def get_pickup_assignments():
+    """
+    Return all pickup assignments.
+    """
+
+    return pickup_assignments
+
+
+# Test the automation system
+if __name__ == "__main__":
+
+    print("🔔 Smart Food Rescue Automation")
+    print("--------------------------------")
+
+    notification = send_notification(
+        trust_name="Hope Trust",
+        donation_id=1,
+        food_type="Rice",
+        quantity=80
+    )
+
+    print("\nNotification:")
+    print(notification["message"])
+
+    pickup = assign_pickup(
+        donation_id=1,
+        volunteer_name="Volunteer 1",
+        pickup_location="Coimbatore"
+    )
+
+    print("\nPickup Assigned:")
+    print("Volunteer:", pickup["volunteer"])
+    print("Location:", pickup["pickup_location"])
+
+    result = update_delivery_status(
+        donation_id=1,
+        status="Food Picked Up"
+    )
+
+    print("\nDelivery Status:")
+    print(result["pickup"]["status"])
