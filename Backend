@@ -1,0 +1,91 @@
+from flask import Flask, request, jsonify
+from datetime import datetime
+
+app = Flask(__name__)
+
+# Temporary storage for food donations
+food_donations = []
+
+
+@app.route("/")
+def home():
+    return jsonify({
+        "message": "Smart Food Rescue Backend is running!"
+    })
+
+
+@app.route("/donate", methods=["POST"])
+def donate_food():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "No data received"
+        }), 400
+
+    required_fields = [
+        "name",
+        "food_type",
+        "quantity",
+        "location",
+        "available_time"
+    ]
+
+    for field in required_fields:
+        if field not in data or data[field] == "":
+            return jsonify({
+                "success": False,
+                "message": f"{field} is required"
+            }), 400
+
+    donation = {
+        "id": len(food_donations) + 1,
+        "name": data["name"],
+        "food_type": data["food_type"],
+        "quantity": data["quantity"],
+        "location": data["location"],
+        "available_time": data["available_time"],
+        "status": "Waiting for Trust",
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    food_donations.append(donation)
+
+    return jsonify({
+        "success": True,
+        "message": "Food donation registered successfully!",
+        "donation": donation
+    })
+
+
+@app.route("/donations", methods=["GET"])
+def get_donations():
+
+    return jsonify({
+        "success": True,
+        "total_donations": len(food_donations),
+        "donations": food_donations
+    })
+
+
+@app.route("/donation/<int:donation_id>", methods=["GET"])
+def get_donation(donation_id):
+
+    for donation in food_donations:
+
+        if donation["id"] == donation_id:
+            return jsonify({
+                "success": True,
+                "donation": donation
+            })
+
+    return jsonify({
+        "success": False,
+        "message": "Donation not found"
+    }), 404
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
