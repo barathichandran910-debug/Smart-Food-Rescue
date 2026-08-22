@@ -1,0 +1,124 @@
+def calculate_priority(food_type, quantity, available_hours):
+    """
+    Calculate the priority of a food donation.
+    Higher score = more urgent.
+    """
+
+    score = 0
+
+    # Quantity-based score
+    if quantity >= 100:
+        score += 30
+    elif quantity >= 50:
+        score += 20
+    else:
+        score += 10
+
+    # Time-based score
+    if available_hours <= 2:
+        score += 40
+    elif available_hours <= 5:
+        score += 25
+    else:
+        score += 10
+
+    # Food type
+    if food_type.lower() in ["meals", "rice", "vegetarian food"]:
+        score += 20
+    else:
+        score += 10
+
+    return score
+
+
+def find_best_trust(food_type, quantity, available_hours, trusts):
+    """
+    Select the most suitable trust from the available trusts.
+    """
+
+    priority = calculate_priority(
+        food_type,
+        quantity,
+        available_hours
+    )
+
+    if not trusts:
+        return {
+            "success": False,
+            "message": "No nearby trust available"
+        }
+
+    # Simple AI-based matching score
+    best_trust = None
+    best_score = -1
+
+    for trust in trusts:
+
+        score = priority
+
+        # Trust preference matching
+        accepted_food = trust.get("accepted_food", [])
+
+        if food_type.lower() in [
+            food.lower() for food in accepted_food
+        ]:
+            score += 20
+
+        # Distance preference
+        distance = trust.get("distance_km", 999)
+
+        if distance <= 2:
+            score += 30
+        elif distance <= 5:
+            score += 20
+        elif distance <= 10:
+            score += 10
+
+        if score > best_score:
+            best_score = score
+            best_trust = trust
+
+    return {
+        "success": True,
+        "priority_score": priority,
+        "recommended_trust": best_trust,
+        "matching_score": best_score
+    }
+
+
+# Test data
+if __name__ == "__main__":
+
+    trusts = [
+        {
+            "name": "Hope Trust",
+            "distance_km": 2,
+            "accepted_food": ["Rice", "Meals", "Vegetarian Food"]
+        },
+        {
+            "name": "Care Foundation",
+            "distance_km": 6,
+            "accepted_food": ["Meals", "Snacks"]
+        },
+        {
+            "name": "Helping Hands Trust",
+            "distance_km": 3,
+            "accepted_food": ["Rice", "Meals"]
+        }
+    ]
+
+    result = find_best_trust(
+        food_type="Rice",
+        quantity=80,
+        available_hours=2,
+        trusts=trusts
+    )
+
+    print("🤖 AI Food Matching Result")
+    print("--------------------------")
+    print("Priority Score:", result["priority_score"])
+    print("Recommended Trust:",
+          result["recommended_trust"]["name"])
+    print("Distance:",
+          result["recommended_trust"]["distance_km"], "km")
+    print("Matching Score:", result["matching_score"])
